@@ -1,4 +1,4 @@
-import { Component, h, Host, State } from '@stencil/core'
+import { Component, h, Host, Prop, State, Watch } from '@stencil/core'
 import { rapidApiKey, rapidApiHost } from '../../settings/keys'
 import { StockResData } from '../../interfaces/Stocks'
 
@@ -13,15 +13,26 @@ export class StockPrice {
   @State() validUserInput = false
   @State() errorMessage: string
 
-  enteredUserInputHandler(event: Event) {
-    this.enteredSymbol = (event.target as HTMLInputElement).value
-    if (this.enteredSymbol.trim().length > 0) this.validUserInput = true
-    else this.validUserInput = false
+  @Prop({ mutable: true, reflect: true }) stockSymbol: string
+  @Watch('stockSymbol')
+  stockSymbolChanged(newVal: string, oldVal: string) {
+    if (newVal !== oldVal) {
+      this.validUserInput = true
+      this.enteredSymbol = newVal
+      this.fetchStockPrice(newVal)
+    }
   }
 
-  async fetchStockPriceHandler(event: Event) {
-    event.preventDefault()
-    fetch(`https://alpha-vantage.p.rapidapi.com/query?function=GLOBAL_QUOTE&symbol=${this.enteredSymbol}&datatype=json`, {
+  componentWillLoad() {
+    if (this.stockSymbol) {
+      this.validUserInput = true
+      this.enteredSymbol = this.stockSymbol
+      this.fetchStockPrice(this.stockSymbol)
+    }
+  }
+
+  fetchStockPrice(symbol: string) {
+    fetch(`https://alpha-vantage.p.rapidapi.com/query?function=GLOBAL_QUOTE&symbol=${symbol}&datatype=json`, {
       method: 'GET',
       headers: {
         'X-RapidAPI-Key': rapidApiKey,
@@ -35,6 +46,17 @@ export class StockPrice {
         this.errorMessage = null
       })
       .catch(err => (this.errorMessage = err.message))
+  }
+
+  enteredUserInputHandler(event: Event) {
+    this.enteredSymbol = (event.target as HTMLInputElement).value
+    if (this.enteredSymbol.trim().length > 0) this.validUserInput = true
+    else this.validUserInput = false
+  }
+
+  async fetchStockPriceHandler(event: Event) {
+    event.preventDefault()
+    this.stockSymbol = this.enteredSymbol
   }
 
   render() {
