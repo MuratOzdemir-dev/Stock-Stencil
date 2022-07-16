@@ -1,21 +1,6 @@
-import { Component, h, Host, State } from '@stencil/core';
-import { rapidApiKey, rapidApiHost } from '../../settings/keys';
-
-interface StockData {
-  '01. symbol': string;
-  '02. open': string;
-  '03. high': string;
-  '04. low': string;
-  '05. price': string;
-  '06. volume': string;
-  '07. latest trading day': string;
-  '08. previous close': string;
-  '09. change': string;
-}
-
-interface StockResData {
-  'Global Quote': StockData;
-}
+import { Component, h, Host, State } from '@stencil/core'
+import { rapidApiKey, rapidApiHost } from '../../settings/keys'
+import { StockResData } from '../../interfaces/Stocks'
 
 @Component({
   tag: 'siu-stock',
@@ -23,39 +8,49 @@ interface StockResData {
   styleUrl: 'stock-price.css',
 })
 export class StockPrice {
-  @State() stockData: StockResData;
+  @State() stockData: StockResData
+  @State() enteredSymbol: string
+  @State() validUserInput = false
+  @State() errorMessage: string
+
+  enteredUserInputHandler(event: Event) {
+    this.enteredSymbol = (event.target as HTMLInputElement).value
+    if (this.enteredSymbol.trim().length > 0) this.validUserInput = true
+    else this.validUserInput = false
+  }
 
   async fetchStockPriceHandler(event: Event) {
-    event.preventDefault();
-    try {
-      fetch('https://alpha-vantage.p.rapidapi.com/query?function=GLOBAL_QUOTE&symbol=MSFT&datatype=json', {
-        method: 'GET',
-        headers: {
-          'X-RapidAPI-Key': rapidApiKey,
-          'X-RapidAPI-Host': rapidApiHost,
-        },
+    event.preventDefault()
+    fetch(`https://alpha-vantage.p.rapidapi.com/query?function=GLOBAL_QUOTE&symbol=${this.enteredSymbol}&datatype=json`, {
+      method: 'GET',
+      headers: {
+        'X-RapidAPI-Key': rapidApiKey,
+        'X-RapidAPI-Host': rapidApiHost,
+      },
+    })
+      .then(response => response.json())
+      .then(response => {
+        if (!response['Global Quote']['05. price']) throw new Error('Price not found!')
+        this.stockData = { ...response }
+        this.errorMessage = null
       })
-        .then(response => response.json())
-        .then(response => {
-          this.stockData = { ...response };
-        })
-        .catch(err => console.log(err));
-    } catch (error) {
-      console.log(error);
-    }
+      .catch(err => (this.errorMessage = err.message))
   }
 
   render() {
     return (
       <Host>
         <form onSubmit={this.fetchStockPriceHandler.bind(this)}>
-          <input id="stock-symbol" type="text" />
-          <button type="submit">Submit</button>
+          <input id="stock-symbol" type="text" value={this.enteredSymbol} onInput={this.enteredUserInputHandler.bind(this)} />
+          <button type="submit" disabled={!this.validUserInput}>
+            Submit
+          </button>
         </form>
         <main class="content">
           <p>Price: ${this.stockData ? this.stockData['Global Quote']['05. price'] : 0}</p>
+          {this.errorMessage && <p>{this.errorMessage}</p>}
         </main>
       </Host>
-    );
+    )
   }
 }
