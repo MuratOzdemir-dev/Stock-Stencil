@@ -9,6 +9,8 @@ export namespace Components {
     interface SiuStock {
         "stockSymbol": string;
     }
+    interface SiuStockFinder {
+    }
 }
 declare global {
     interface HTMLSiuStockElement extends Components.SiuStock, HTMLStencilElement {
@@ -17,16 +19,26 @@ declare global {
         prototype: HTMLSiuStockElement;
         new (): HTMLSiuStockElement;
     };
+    interface HTMLSiuStockFinderElement extends Components.SiuStockFinder, HTMLStencilElement {
+    }
+    var HTMLSiuStockFinderElement: {
+        prototype: HTMLSiuStockFinderElement;
+        new (): HTMLSiuStockFinderElement;
+    };
     interface HTMLElementTagNameMap {
         "siu-stock": HTMLSiuStockElement;
+        "siu-stock-finder": HTMLSiuStockFinderElement;
     }
 }
 declare namespace LocalJSX {
     interface SiuStock {
         "stockSymbol"?: string;
     }
+    interface SiuStockFinder {
+    }
     interface IntrinsicElements {
         "siu-stock": SiuStock;
+        "siu-stock-finder": SiuStockFinder;
     }
 }
 export { LocalJSX as JSX };
@@ -34,6 +46,7 @@ declare module "@stencil/core" {
     export namespace JSX {
         interface IntrinsicElements {
             "siu-stock": LocalJSX.SiuStock & JSXBase.HTMLAttributes<HTMLSiuStockElement>;
+            "siu-stock-finder": LocalJSX.SiuStockFinder & JSXBase.HTMLAttributes<HTMLSiuStockFinderElement>;
         }
     }
 }
