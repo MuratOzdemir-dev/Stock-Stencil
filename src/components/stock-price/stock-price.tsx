@@ -73,7 +73,7 @@ export class StockPrice {
   }
 
   render() {
-    if (this.isFetching) return <siu-spinner></siu-spinner>
+    if (this.isFetching) return <siu-spinner />
     return (
       <Host class={this.errorMessage ? 'error' : ''}>
         <form onSubmit={this.fetchStockPriceHandler.bind(this)}>
