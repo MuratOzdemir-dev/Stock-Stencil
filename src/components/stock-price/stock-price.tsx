@@ -1,4 +1,4 @@
-import { Component, h, Host, Prop, State, Watch } from '@stencil/core'
+import { Component, h, Host, Listen, Prop, State, Watch } from '@stencil/core'
 import { rapidApiKey, rapidApiHost } from '../../settings/keys'
 import { StockResData } from '../../interfaces/Stocks'
 
@@ -12,6 +12,7 @@ export class StockPrice {
   @State() enteredSymbol: string
   @State() validUserInput = false
   @State() errorMessage: string
+  @State() isFetching = false
 
   @Prop({ mutable: true, reflect: true }) stockSymbol: string
   @Watch('stockSymbol')
@@ -30,8 +31,16 @@ export class StockPrice {
       this.fetchStockPrice(this.stockSymbol)
     }
   }
+  @Listen('siuSymbolSelected', { target: 'body' })
+  onStockSymbolSelected(event: CustomEvent) {
+    console.log('custom event', event.detail)
+    if (event.detail && event.detail !== this.stockSymbol) {
+      this.stockSymbol = event.detail
+    }
+  }
 
   fetchStockPrice(symbol: string) {
+    this.isFetching = true
     fetch(`https://alpha-vantage.p.rapidapi.com/query?function=GLOBAL_QUOTE&symbol=${symbol}&datatype=json`, {
       method: 'GET',
       headers: {
@@ -44,8 +53,12 @@ export class StockPrice {
         if (!response['Global Quote']['05. price']) throw new Error('Price not found!')
         this.stockData = { ...response }
         this.errorMessage = null
+        this.isFetching = false
       })
-      .catch(err => (this.errorMessage = err.message))
+      .catch(err => {
+        this.errorMessage = err.message
+        this.isFetching = false
+      })
   }
 
   enteredUserInputHandler(event: Event) {
@@ -60,11 +73,12 @@ export class StockPrice {
   }
 
   render() {
+    if (this.isFetching) return <siu-spinner></siu-spinner>
     return (
-      <Host>
+      <Host class={this.errorMessage ? 'error' : ''}>
         <form onSubmit={this.fetchStockPriceHandler.bind(this)}>
           <input id="stock-symbol" type="text" value={this.enteredSymbol} onInput={this.enteredUserInputHandler.bind(this)} />
-          <button type="submit" disabled={!this.validUserInput}>
+          <button type="submit" disabled={!this.validUserInput || this.isFetching}>
             Submit
           </button>
         </form>

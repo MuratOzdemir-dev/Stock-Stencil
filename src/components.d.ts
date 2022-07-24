@@ -6,13 +6,25 @@
  */
 import { HTMLStencilElement, JSXBase } from "@stencil/core/internal";
 export namespace Components {
+    interface SiuSpinner {
+    }
     interface SiuStock {
         "stockSymbol": string;
     }
     interface SiuStockFinder {
     }
 }
+export interface SiuStockFinderCustomEvent<T> extends CustomEvent<T> {
+    detail: T;
+    target: HTMLSiuStockFinderElement;
+}
 declare global {
+    interface HTMLSiuSpinnerElement extends Components.SiuSpinner, HTMLStencilElement {
+    }
+    var HTMLSiuSpinnerElement: {
+        prototype: HTMLSiuSpinnerElement;
+        new (): HTMLSiuSpinnerElement;
+    };
     interface HTMLSiuStockElement extends Components.SiuStock, HTMLStencilElement {
     }
     var HTMLSiuStockElement: {
@@ -26,17 +38,22 @@ declare global {
         new (): HTMLSiuStockFinderElement;
     };
     interface HTMLElementTagNameMap {
+        "siu-spinner": HTMLSiuSpinnerElement;
         "siu-stock": HTMLSiuStockElement;
         "siu-stock-finder": HTMLSiuStockFinderElement;
     }
 }
 declare namespace LocalJSX {
+    interface SiuSpinner {
+    }
     interface SiuStock {
         "stockSymbol"?: string;
     }
     interface SiuStockFinder {
+        "onSiuSymbolSelected"?: (event: SiuStockFinderCustomEvent<string>) => void;
     }
     interface IntrinsicElements {
+        "siu-spinner": SiuSpinner;
         "siu-stock": SiuStock;
         "siu-stock-finder": SiuStockFinder;
     }
@@ -45,6 +62,7 @@ export { LocalJSX as JSX };
 declare module "@stencil/core" {
     export namespace JSX {
         interface IntrinsicElements {
+            "siu-spinner": LocalJSX.SiuSpinner & JSXBase.HTMLAttributes<HTMLSiuSpinnerElement>;
             "siu-stock": LocalJSX.SiuStock & JSXBase.HTMLAttributes<HTMLSiuStockElement>;
             "siu-stock-finder": LocalJSX.SiuStockFinder & JSXBase.HTMLAttributes<HTMLSiuStockFinderElement>;
         }
